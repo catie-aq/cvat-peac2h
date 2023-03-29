@@ -58,10 +58,30 @@ services:
       - cvat_data:/home/django/data
       - cvat_keys:/home/django/keys
       - cvat_logs:/home/django/logs
+      - ./share:/home/django/share
     networks:
       cvat:
         aliases:
           - cvat-server
+
+  samba:
+    image: ghcr.io/morremeyer/samba
+    # container_name: samba
+    restart: always
+    environment:
+      TZ: 'UTC'
+    volumes:
+      # Current folder shared with Django !
+      - ./share:/share
+      #- /home/django/share:/share
+    ports:
+      - "137:137/udp"
+      - "138:138/udp"
+      - "139:139"
+      - "445:445"
+    command: >
+      -u "samba1;password"
+      -s "share1;/share;yes;no;yes;all" -p
 
   cvat_utils:
     container_name: cvat_utils
@@ -169,14 +189,15 @@ services:
       - '--providers.docker.network=cvat'
       - '--entryPoints.web.address=:8080'
       - '--providers.file.directory=/etc/traefik/rules'
+      - '--log.level=DEBUG'
     # Uncomment to get Traefik dashboard
-    #   - "--entryPoints.dashboard.address=:8090"
-    #   - "--api.dashboard=true"
-    # labels:
-    #   - traefik.enable=true
-    #   - traefik.http.routers.dashboard.entrypoints=dashboard
-    #   - traefik.http.routers.dashboard.service=api@internal
-    #   - traefik.http.routers.dashboard.rule=Host(`${CVAT_HOST:-localhost}`)
+      - "--entryPoints.dashboard.address=:8090"
+      - "--api.dashboard=true"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.dashboard.entrypoints=dashboard
+      - traefik.http.routers.dashboard.service=api@internal
+      - traefik.http.routers.dashboard.rule=Host(`${CVAT_HOST:-localhost}`)
     ports:
       - 8080:8080
       - 8090:8090

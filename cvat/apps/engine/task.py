@@ -229,43 +229,44 @@ def _validate_manifest(manifests, root_dir, is_in_cloud, db_cloud_storage):
     return None
 
 def _validate_url(url):
-    def _validate_ip_address(ip_address):
-        if not ip_address.is_global:
-            raise ValidationError('Non public IP address \'{}\' is provided!'.format(ip_address))
 
-    ALLOWED_SCHEMES = ['http', 'https']
+    # def _validate_ip_address(ip_address):
+    #     if not ip_address.is_global:
+    #         raise ValidationError('Non public IP address \'{}\' is provided!'.format(ip_address))
 
-    parsed_url = urlparse.urlparse(url)
+    # ALLOWED_SCHEMES = ['http', 'https']
 
-    if parsed_url.scheme not in ALLOWED_SCHEMES:
-        raise ValueError('Unsupported URL sheme: {}. Only http and https are supported'.format(parsed_url.scheme))
+    # parsed_url = urlparse.urlparse(url)
 
-    try:
-        ip_address = ipaddress.ip_address(parsed_url.hostname)
-        _validate_ip_address(ip_address)
-    except ValueError as _:
-        ip_v4_records = None
-        ip_v6_records = None
-        try:
-            ip_v4_records = dns.resolver.query(parsed_url.hostname, 'A')
-            for record in ip_v4_records:
-                _validate_ip_address(ipaddress.ip_address(record.to_text()))
-        except ValidationError:
-            raise
-        except Exception as e:
-            slogger.glob.info('Cannot get A record for domain \'{}\': {}'.format(parsed_url.hostname, e))
+    # if parsed_url.scheme not in ALLOWED_SCHEMES:
+    #     raise ValueError('Unsupported URL sheme: {}. Only http and https are supported'.format(parsed_url.scheme))
 
-        try:
-            ip_v6_records = dns.resolver.query(parsed_url.hostname, 'AAAA')
-            for record in ip_v6_records:
-                _validate_ip_address(ipaddress.ip_address(record.to_text()))
-        except ValidationError:
-            raise
-        except Exception as e:
-            slogger.glob.info('Cannot get AAAA record for domain \'{}\': {}'.format(parsed_url.hostname, e))
+    # try:
+    #     ip_address = ipaddress.ip_address(parsed_url.hostname)
+    #     _validate_ip_address(ip_address)
+    # except ValueError as _:
+    #     ip_v4_records = None
+    #     ip_v6_records = None
+    #     try:
+    #         ip_v4_records = dns.resolver.query(parsed_url.hostname, 'A')
+    #         for record in ip_v4_records:
+    #             _validate_ip_address(ipaddress.ip_address(record.to_text()))
+    #     except ValidationError:
+    #         raise
+    #     except Exception as e:
+    #         slogger.glob.info('Cannot get A record for domain \'{}\': {}'.format(parsed_url.hostname, e))
 
-        if not ip_v4_records and not ip_v6_records:
-            raise ValidationError('Cannot resolve IP address for domain \'{}\''.format(parsed_url.hostname))
+    #     try:
+    #         ip_v6_records = dns.resolver.query(parsed_url.hostname, 'AAAA')
+    #         for record in ip_v6_records:
+    #             _validate_ip_address(ipaddress.ip_address(record.to_text()))
+    #     except ValidationError:
+    #         raise
+    #     except Exception as e:
+    #         slogger.glob.info('Cannot get AAAA record for domain \'{}\': {}'.format(parsed_url.hostname, e))
+
+    #     if not ip_v4_records and not ip_v6_records:
+    #         raise ValidationError('Cannot resolve IP address for domain \'{}\''.format(parsed_url.hostname))
 
 def _download_data(urls, upload_dir):
     job = rq.get_current_job()
@@ -274,7 +275,8 @@ def _download_data(urls, upload_dir):
         name = os.path.basename(urlrequest.url2pathname(urlparse.urlparse(url).path))
         if name in local_files:
             raise Exception("filename collision: {}".format(name))
-        _validate_url(url)
+
+        # _validate_url(url)
         slogger.glob.info("Downloading: {}".format(url))
         job.meta['status'] = '{} is being downloaded..'.format(url)
         job.save_meta()
